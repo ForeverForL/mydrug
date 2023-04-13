@@ -183,7 +183,7 @@ class RNNGen(nn.Module):
                         print('%d\t%s' % (valids[i], smile), file=log)
         log.close()
 
-class Generator(RNNGen):
+class Generator(nn.Module):
     """
     堆叠循环神经网络模型，用于生成SMILES
     """
@@ -216,7 +216,10 @@ class Generator(RNNGen):
         input_t = self.fixlinear(output)
         for i in range(1, self.num_layers):
             output, h_out = self.rnn[i](input_t, h_out)
+            #格式对齐
             input_t = self.fixlinear(output)
+            # 添加激活函数
+            input_t = self.activation(input_t)
         output = self.linear(output).squeeze(1)
         return output, h_out
 
@@ -376,9 +379,9 @@ class Generator(RNNGen):
                         print('%d\t%s' % (valids[i], smile), file=log)
         log.close()
 
-class Atten(RNNGen):
+class Atten(nn.Module):
     """
-    堆叠循环神经网络模型，用于生成SMILES
+    添加注意力机制
     """
     def __init__(self, voc, embed_size=128, hidden_size=512, num_layers=3, is_lstm=True, lr=1e-3):
         super(Atten, self).__init__()
@@ -409,7 +412,8 @@ class Atten(RNNGen):
         input_t = self.fixlinear(output)
         for i in range(1, self.num_layers):
             output, h_out = self.rnn[i](input_t, h_out)
-            input_t = self.fixlinear(output)
+            input_t = self.activation(output)
+            input_t = self.fixlinear(input_t)
         output = self.linear(output).squeeze(1)
         return output, h_out
 
